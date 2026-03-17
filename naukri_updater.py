@@ -8,7 +8,6 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # --- Configuration ---
@@ -35,15 +34,20 @@ def update_naukri_profile():
     driver = None  # Initialize driver to None
     try:
         # --- 1. Initialize WebDriver ---
-        # Using webdriver-manager to automatically handle the chromedriver
-        service = ChromeService(ChromeDriverManager().install())
         options = webdriver.ChromeOptions()
+        
+        # REQUIRED FOR ARM / ORACLE CLOUD: Point to the system-installed Chromium
+        options.binary_location = '/usr/bin/chromium-browser'
+        
         options.add_argument("--headless")  # Server environment requires headless mode
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--disable-gpu")
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        
+        # REQUIRED FOR ARM: Use the system-installed chromedriver
+        service = ChromeService(executable_path='/usr/bin/chromedriver')
         
         driver = webdriver.Chrome(service=service, options=options)
         wait = WebDriverWait(driver, 20) # Set a generous wait time
@@ -56,11 +60,11 @@ def update_naukri_profile():
         # Find username field and enter username
         username_field = wait.until(EC.presence_of_element_located((By.ID, "usernameField")))
         username_field.send_keys(NAUKRI_USERNAME)
-        wait
+        
         # Find password field and enter password
         password_field = driver.find_element(By.ID, "passwordField")
         password_field.send_keys(NAUKRI_PASSWORD)
-        wait
+        
         # Click the login button
         login_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
         login_button.click()
@@ -80,14 +84,13 @@ def update_naukri_profile():
         edit_icon = wait.until(EC.element_to_be_clickable((By.XPATH, "//em[text()='editOneTheme']")))
         edit_icon.click()
 
-
         print("Clicked on edit icon.")
         time.sleep(5)
 
-        # Find the password field using an attribute selector
+        # Find the name field using an attribute selector
         name_input = driver.find_element(By.CSS_SELECTOR, "input[value='Mohanraj T']")
-        # print(name_input)
-# Interact with it
+        
+        # Interact with it
         if name_input.is_displayed():
             print("Input field is visible.")
             name_input.clear() 
@@ -97,23 +100,15 @@ def update_naukri_profile():
         else:
             print("Input field is not visible.")
         
-        
         # Click the save button
-        # By.XPATH, "//em[@class='btn-dark-ot']"
         save_button = driver.find_element(By.XPATH, "//button[text()='Save']")
         save_button.click()
-
-        # # Wait for the success message or for the edit form to disappear
-        # wait.until(EC.invisibility_of_element_located((By.ID, "resumeHeadlineTxt")))
 
         print("✅ Profile updated successfully!")
         
     except (TimeoutException, NoSuchElementException) as e:
         print(f"❌ An error occurred: {e}")
         print("Could not update profile. This might be due to a website change, a CAPTCHA, or a slow connection.")
-        # Optional: Save a screenshot for debugging
-        # if driver:
-        #     driver.save_screenshot("error_screenshot.png")
             
     finally:
         # --- 4. Clean Up ---
