@@ -29,7 +29,7 @@ NAUKRI_PROFILE_URL = "https://www.naukri.com/mnjuser/profile"
 def update_naukri_profile():
     """
     This function logs into Naukri, navigates to the profile page,
-    and updates the 'Resume Headline' to refresh the profile's 'last updated' timestamp.
+    and updates the 'Profile Name' to refresh the profile's 'last updated' timestamp.
     """
     print("--- Starting Naukri Profile Update ---")
     driver = None  # Initialize driver to None
@@ -38,7 +38,9 @@ def update_naukri_profile():
         # Using webdriver-manager to automatically handle the chromedriver
         service = ChromeService(ChromeDriverManager().install())
         options = webdriver.ChromeOptions()
-        # options.add_argument("--headless")  # Uncomment to run in the background
+        options.add_argument("--headless")  # Server environment requires headless mode
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--disable-gpu")
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
@@ -84,7 +86,7 @@ def update_naukri_profile():
 
         # Find the password field using an attribute selector
         name_input = driver.find_element(By.CSS_SELECTOR, "input[value='Mohanraj T']")
-        print(name_input)
+        # print(name_input)
 # Interact with it
         if name_input.is_displayed():
             print("Input field is visible.")
@@ -97,6 +99,7 @@ def update_naukri_profile():
         
         
         # Click the save button
+        # By.XPATH, "//em[@class='btn-dark-ot']"
         save_button = driver.find_element(By.XPATH, "//button[text()='Save']")
         save_button.click()
 
@@ -109,8 +112,8 @@ def update_naukri_profile():
         print(f"❌ An error occurred: {e}")
         print("Could not update profile. This might be due to a website change, a CAPTCHA, or a slow connection.")
         # Optional: Save a screenshot for debugging
-        if driver:
-            driver.save_screenshot("error_screenshot.png")
+        # if driver:
+        #     driver.save_screenshot("error_screenshot.png")
             
     finally:
         # --- 4. Clean Up ---
@@ -120,18 +123,9 @@ def update_naukri_profile():
         print("--- Update process finished. Waiting for next schedule. ---\n")
 
 
-# --- Scheduling The Job ---
+# --- Execution ---
 if __name__ == "__main__":
     print("🚀 Naukri Profile Updater Bot Started!")
-    
-    # Run the job once immediately on startup
+    # Run the job once and then exit
     update_naukri_profile()
-    
-    # Schedule the job to run every 1 hour
-    # schedule.every(1).hour.do(update_naukri_profile)
-    
-    # print(f"Scheduled to run every hour. Next run at: {schedule.next_run}")
-
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)
+    print("✅ Execution completed. Exiting to free up memory.")
